@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # shellcheck disable=2016,2034,2059,2128,2145,2178
-{ declare -gA bashup_ev bashup_ev_r
+{ declare -gA bashup_ev bashup_ev_r bashup_ev_a
 event(){ case $1 in error|quote|encode|decode);; *)
 	local n='' s=${2:-_};local -n e=bashup_ev["$s"] f=bashup_ev_r["$s"]
-	case $1 in emit) shift;${f-}||return;eval "${e-}";return;; on|once|off|has)
+	case $1 in emit) shift;${f-}||return; set $1 ${bashup_ev_a["$s"]} ${@:2}; unset bashup_ev_a["$s"]; eval "${e-}";return;; on|once|off|has)
 		case "${3-}" in @_) n='$#';; @*[^0-9]*);; @[0-9]*) n=$((${3#@}));; esac; ${n:+
 		set -- "$1" "$2" "${@:4}" }
 		case $1/$# in
@@ -12,6 +12,7 @@ event(){ case $1 in error|quote|encode|decode);; *)
 		esac
 	esac
 esac ;__ev."$@";}
+__ev.curry(){ shift; bashup_ev_a["$s"]+="$@ ";}
 __ev.error(){ echo "$1">&2;return "${2:-64}";}
 __ev.quote(){ REPLY=; ${@+printf -v REPLY ' %q' "$@"}; REPLY=${REPLY# };}
 __ev.has(){ [[ ${e-} && $'\n'"$e" == *$'\n'"$REPLY"* && ! ${f-} ]];}
